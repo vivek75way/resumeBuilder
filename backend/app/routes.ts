@@ -1,11 +1,10 @@
-import express from "express";
-import userRoutes from "./user/user.route";
-import resumeRoutes from "./resume/resume.route";
+import { Router } from 'express';
+import resumeRoutes from './resume/resume.route';
+import userRoutes from './user/user.route';
 
-// routes
-const router = express.Router();
+const router = Router();
 
-router.use("/users", userRoutes);
-router.use("/resume", resumeRoutes);
+router.use('/user', userRoutes);
+router.use('/resume', resumeRoutes);
 
 export default router;

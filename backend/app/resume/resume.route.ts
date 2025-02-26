@@ -1,26 +1,15 @@
-import { Router } from "express";
-import { catchError } from "../common/middleware/cath-error.middleware";
-import * as resumeController from "./resume.controller";
-import * as resumeValidator from "./resume.validation";
+import express from "express";
+import { ResumeController } from "./resume.controller";
 
-const router = Router();
+const router = express.Router();
 
-router
-  .get("/getresume", resumeController.getAllResume)
-  .get("getresume/:id", resumeController.getResumeById)
-  .delete("deleteresume/:id", resumeController.deleteResume)
-  .post(
-    "/createresume",
-    resumeValidator.createResume,
-    catchError,
-    resumeController.createResume,
-  )
-  .put(
-    "updateresume/:id",
-    resumeValidator.updateResume,
-    catchError,
-    resumeController.updateResume,
-  )
-  
+const resumeController = new ResumeController();
+
+// Define routes
+router.get("getresume/:id", resumeController.getResumeById);
+router.get("/getallresume", resumeController.getAllResumes);
+router.post("/createresume", resumeController.createResume);
+router.put("updateresume/:id", resumeController.updateResume);
+router.delete("deleteresume/:id", resumeController.deleteResume);
 
 export default router;

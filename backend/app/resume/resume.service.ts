@@ -1,34 +1,65 @@
-import { type IResume } from "./resume.dto";
-import ResumeSchema from "./resume.schema";
+import { PrismaClient, Prisma, Resume } from '@prisma/client';
 
-export const createResume = async (data: IResume) => {
-  const result = await ResumeSchema.create({ ...data, active: true });
-  return result;
-};
+const prisma = new PrismaClient();
 
-export const updateResume = async (id: string, data: IResume) => {
-  const result = await ResumeSchema.findOneAndUpdate({ _id: id }, data, {
-    new: true,
-  });
-  return result;
-};
+export class ResumeService {
+  async getResumeById(resumeId: string): Promise<Resume | null> {
+    try {
+      return await prisma.resume.findUnique({ where: { id: resumeId } });
+    } catch (error) {
+      console.error('Error fetching resume:', error);
+      throw new Error('Could not fetch resume');
+    }
+  }
 
-export const editResume = async (id: string, data: Partial<IResume>) => {
-  const result = await ResumeSchema.findOneAndUpdate({ _id: id }, data);
-  return result;
-};
+  async getAllResumes(): Promise<Resume[]> {
+    try {
+      return await prisma.resume.findMany();
+    } catch (error) {
+      console.error("Error fetching all resumes:", error);
+      throw new Error("Could not fetch resumes");
+    }
+  }
 
-export const deleteResume = async (id: string) => {
-  const result = await ResumeSchema.deleteOne({ _id: id });
-  return result;
-};
+  async createResume(data: Prisma.ResumeCreateInput): Promise<Resume> {
+    try {
+      return await prisma.resume.create({ data });
+    } catch (error) {
+      console.error('Error creating resume:', error);
+      throw new Error('Could not create resume');
+    }
+  }
 
-export const getResumeById = async (id: string) => {
-  const result = await ResumeSchema.findById(id).lean();
-  return result;
-};
+  async updateResume(resumeId: string, data: Prisma.ResumeUpdateInput): Promise<Resume> {
+    try {
+      const resume = await prisma.resume.findUnique({ where: { id: resumeId } });
 
-export const getAllResume = async () => {
-  const result = await ResumeSchema.find({}).lean();
-  return result;
-};
+      if (!resume) {
+        throw new Error('Resume not found');
+      }
+
+      return await prisma.resume.update({
+        where: { id: resumeId },
+        data,
+      });
+    } catch (error) {
+      console.error('Error updating resume:', error);
+      throw new Error('Could not update resume');
+    }
+  }
+
+  async deleteResume(resumeId: string): Promise<void> {
+    try {
+      const resume = await prisma.resume.findUnique({ where: { id: resumeId } });
+
+      if (!resume) {
+        throw new Error('Resume not found');
+      }
+
+      await prisma.resume.delete({ where: { id: resumeId } });
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      throw new Error('Could not delete resume');
+    }
+  }
+}

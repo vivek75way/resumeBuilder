@@ -1,5 +1,5 @@
-export interface BaseSchema {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
+export interface BaseDTO {
+  id?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

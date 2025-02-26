@@ -1,77 +1,36 @@
 import bcrypt from "bcrypt";
+import { type Request } from "express";
+import createError from "http-errors";
 import jwt from "jsonwebtoken";
 import passport from "passport";
-import { Strategy, ExtractJwt } from "passport-jwt";
+import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 import { Strategy as LocalStrategy } from "passport-local";
-import createError from "http-errors";
-import * as userService from "../../user/user.service";
-import { type Request } from "express";
 import { type IUser } from "../../user/user.dto";
+import * as userService from "../../user/user.service";
 
-const isValidPassword = async (value: string, password?: string) => {
-  if (!password) return false; // Prevents passing undefined to bcrypt
-  return await bcrypt.compare(value, password);
+const isValidPassword = async (enteredPassword: string, hashedPassword: string) => {
+  return await bcrypt.compare(enteredPassword, hashedPassword);
 };
-
 
 export const initPassport = (): void => {
   passport.use(
-    new Strategy(
+    new JwtStrategy(
       {
-        secretOrKey: process.env.JWT_SECRET,
+        secretOrKey: process.env.JWT_ACCESS_SECRET ?? "", // Make sure this is set
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       },
-      async (token: { user: Request["user"] }, done) => {
+      async (payload: { id: string }, done) => {
         try {
-          done(null, token.user);
-        } catch (error) {
-          done(error);
-        }
-      },
-    ),
-  );
-
-  // User login strategy
-  passport.use(
-    "login",
-    new LocalStrategy(
-      {
-        usernameField: "email",
-        passwordField: "password",
-      },
-      async (email, password, done) => {
-        try {
-          const user = await userService.getUserByEmail(email);
+          // Fetch user details from DB based on the token payload
+          const user = await userService.getUserById(payload.id);
           if (!user) {
-            return done(createError(401, "User not found!"), false);
+            return done(null, false, { message: "User not found" });
           }
-  
-          if (!user.password) {
-            return done(createError(500, "User password is missing"), false);
-          }
-  
-          const validate = await isValidPassword(password, user.password);
-          if (!validate) {
-            return done(createError(401, "Invalid email or password"), false);
-          }
-  
-          const { password: _p, ...result } = user;
-          return done(null, result, { message: "Logged in Successfully" });
-        } catch (error: any) {
-          return done(createError(500, error.message));
+          return done(null, user);
+        } catch (error) {
+          return done(error);
         }
-      },
-    ),
+      }
+    )
   );
-  
-}; 
-export const createUserTokens = (user: Omit<IUser, "password">) => {
-  const jwtSecret = process.env.JWT_SECRET ?? "";
-  const token = jwt.sign(user, jwtSecret);
-  return { accessToken: token, refreshToken: "" };
-};
-
-export const decodeToken = (token: string) => {
-  const decode = jwt.decode(token);
-  return decode as IUser;
 };

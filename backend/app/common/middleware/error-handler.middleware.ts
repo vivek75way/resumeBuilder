@@ -1,5 +1,5 @@
 import { type ErrorRequestHandler } from "express";
-import { type ErrorResponse } from "../helper/response.hepler";
+import { type ErrorResponse } from "../helper/response.helper";
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   const response: ErrorResponse = {

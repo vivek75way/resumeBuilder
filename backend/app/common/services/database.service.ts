@@ -1,27 +1,13 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
-dotenv.config(); 
+export const prisma = new PrismaClient();
 
-export const initDB = async (): Promise<boolean> => {
+export const initDB = async (): Promise<void> => {
   try {
-    const mongodbUri = process.env.MONGODB_URI;
-    
-    if (!mongodbUri) {
-      throw new Error("MongoDB URI not found! Check your .env file.");
-    }
-
-    mongoose.set("strictQuery", false);
-
-    await mongoose.connect(mongodbUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    } as mongoose.ConnectOptions);
-
-    console.log("DB Connected!");
-    return true;
+    await prisma.$connect();
+    console.log("Database connected successfully");
   } catch (error) {
-    console.error("MongoDB Connection Error:", error);
-    throw error;
+    console.error("Database connection failed:", error);
+    process.exit(1); 
   }
 };
